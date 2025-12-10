@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>會員頁面</title>
+</head>
+<body>
+    <h3>會員頁面</h3>
+    <div>歡迎光臨，<%= name %></div>
+    <hr>
+    <form method="POST" action="/message">
+        <input type="text" name="content" />
+        <button>留言</button>
+    </form>    
+    <hr/>
+    <% for(let i=0;i<data,length;i++){ %>
+        <div>
+            <%= data[i].name %>:
+            <%= data[i].content %>
+        </div>
+    <% } %>
+    <hr/>
+    <a href="/singout">登出</a>
+</body>
+</html>
