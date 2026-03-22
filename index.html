@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>會員留言板系統 | Tai-Ju Liu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Noto+Sans+TC:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#05080f; --surface:#0a0f1a; --card:#0f1624; --border:#1a2640;
+  --accent:#4ade80; --accent2:#60a5fa; --accent3:#f59e0b;
+  --text:#e2e8f0; --muted:#64748b; --dim:#2d4060;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;font-weight:300;overflow-x:hidden;}
+body::after{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(74,222,128,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(74,222,128,.025) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:16px 48px;background:rgba(5,8,15,.9);backdrop-filter:blur(20px);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:15px;color:var(--accent);letter-spacing:1px;}
+.nav-links{display:flex;gap:28px;list-style:none;}
+.nav-links a{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-decoration:none;transition:color .2s;}
+.nav-links a:hover{color:var(--accent);}
+.nav-stack{display:flex;gap:8px;}
+.stack-dot{width:8px;height:8px;border-radius:50%;}
+
+/* HERO */
+.hero{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:120px 48px 80px;position:relative;z-index:1;}
+.hero-eyebrow{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:12px;}
+.hero-eyebrow::before{content:'';display:block;width:32px;height:1px;background:var(--accent);}
+.hero h1{font-family:'Space Grotesk',sans-serif;font-size:clamp(44px,7vw,88px);font-weight:700;line-height:1;letter-spacing:-2px;margin-bottom:12px;}
+.hero h1 em{color:var(--accent);font-style:normal;}
+.hero-sub{font-size:15px;color:var(--muted);line-height:1.8;max-width:520px;margin:24px 0 44px;}
+.hero-cta{display:flex;gap:14px;flex-wrap:wrap;}
+.btn-p{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;background:var(--accent);color:#000;padding:12px 28px;border-radius:3px;text-decoration:none;letter-spacing:1px;transition:all .2s;}
+.btn-p:hover{background:#86efac;transform:translateY(-2px);}
+.btn-g{font-family:'JetBrains Mono',monospace;font-size:12px;border:1px solid var(--border);color:var(--muted);padding:12px 28px;border-radius:3px;text-decoration:none;letter-spacing:1px;transition:all .2s;}
+.btn-g:hover{border-color:var(--accent);color:var(--accent);}
+
+/* TERMINAL */
+.terminal{position:absolute;right:48px;bottom:80px;width:420px;background:#0a0f1a;border:1px solid var(--border);border-radius:8px;overflow:hidden;box-shadow:0 32px 64px rgba(0,0,0,.6);}
+.t-bar{background:#111827;padding:10px 16px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);}
+.t-dot{width:10px;height:10px;border-radius:50%;}
+.t-dot.r{background:#ff5f57;}.t-dot.y{background:#febc2e;}.t-dot.g{background:#28c840;}
+.t-title{margin-left:8px;font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;}
+.t-body{padding:16px;line-height:1.9;font-family:'JetBrains Mono',monospace;font-size:12px;}
+.tp{color:var(--accent);}.tc{color:#e2e8f0;}.to{color:var(--muted);}.ts{color:var(--accent);}.tu{color:var(--accent2);}
+.t-cursor{display:inline-block;width:8px;height:14px;background:var(--accent);animation:blink .8s step-end infinite;vertical-align:text-bottom;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+/* STATS */
+.stats{display:flex;border-top:1px solid var(--border);border-bottom:1px solid var(--border);position:relative;z-index:1;}
+.stat{flex:1;padding:28px 36px;border-right:1px solid var(--border);transition:background .3s;}
+.stat:last-child{border-right:none;}
+.stat:hover{background:var(--card);}
+.stat-num{font-family:'Space Grotesk',sans-serif;font-size:30px;font-weight:700;color:var(--accent);line-height:1;margin-bottom:6px;}
+.stat-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+
+/* SECTION */
+section{position:relative;z-index:1;padding:96px 48px;}
+.sec-label{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.sec-label::before{content:attr(data-n);color:var(--dim);font-size:10px;}
+.sec-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(26px,3.5vw,40px);font-weight:700;letter-spacing:-1px;margin-bottom:52px;}
+
+/* FEATURES */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--border);border:1px solid var(--border);}
+.feat-card{background:var(--card);padding:32px 28px;transition:background .3s;position:relative;overflow:hidden;}
+.feat-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),transparent);transform:scaleX(0);transform-origin:left;transition:transform .4s;}
+.feat-card:hover::after{transform:scaleX(1);}
+.feat-card:hover{background:#111827;}
+.feat-icon{font-size:24px;margin-bottom:16px;}
+.feat-title{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:600;margin-bottom:10px;}
+.feat-desc{font-size:13px;color:var(--muted);line-height:1.7;}
+
+/* ARCH */
+.arch-wrap{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;}
+.arch-diagram{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:32px;}
+.arch-layer{border:1px solid var(--border);border-radius:6px;padding:14px 20px;margin-bottom:8px;display:flex;align-items:center;gap:14px;transition:border-color .2s;}
+.arch-layer:hover{border-color:var(--accent);}
+.arch-layer:last-child{margin-bottom:0;}
+.arch-arrow{text-align:center;color:var(--dim);font-size:18px;margin:4px 0;}
+.arch-icon{font-size:20px;width:36px;flex-shrink:0;}
+.arch-name{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;margin-bottom:2px;}
+.arch-desc{font-size:12px;color:var(--muted);}
+.arch-badges{display:flex;flex-direction:column;gap:10px;}
+.arch-badge{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:14px 18px;display:flex;align-items:center;gap:12px;}
+.badge-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.badge-name{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;margin-bottom:2px;}
+.badge-desc{font-size:12px;color:var(--muted);}
+
+/* ROUTES */
+.route-tbl{width:100%;border-collapse:collapse;font-family:'JetBrains Mono',monospace;}
+.route-tbl thead tr{border-bottom:1px solid var(--border);}
+.route-tbl th{text-align:left;padding:12px 18px;font-size:10px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;}
+.route-tbl td{padding:14px 18px;border-bottom:1px solid rgba(26,38,64,.5);font-size:12px;transition:background .2s;}
+.route-tbl tr:hover td{background:rgba(74,222,128,.03);}
+.rpath{color:var(--accent2);}
+.rdesc{color:var(--muted);font-family:'Noto Sans TC',sans-serif;font-size:13px;}
+.rbadge{display:inline-block;padding:2px 8px;border-radius:2px;font-size:10px;font-weight:500;letter-spacing:1px;}
+.rb-get{background:rgba(74,222,128,.1);color:var(--accent);}
+.rb-post{background:rgba(245,158,11,.1);color:var(--accent3);}
+.rb-lock{background:rgba(96,165,250,.1);color:var(--accent2);}
+.rtag{display:inline-block;font-size:10px;background:rgba(74,222,128,.08);color:var(--accent);padding:1px 6px;border-radius:2px;margin-left:6px;}
+
+/* SCHEMA */
+.schema-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.schema-card{background:var(--card);border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.schema-head{background:var(--surface);padding:14px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.schema-name{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;}
+.schema-coll{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent);margin-left:auto;}
+.schema-body{padding:16px 20px;}
+.schema-field{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(26,38,64,.5);font-family:'JetBrains Mono',monospace;}
+.schema-field:last-child{border-bottom:none;}
+.sf-name{font-size:13px;color:var(--text);min-width:100px;}
+.sf-type{font-size:11px;color:var(--accent3);}
+.sf-note{font-size:11px;color:var(--muted);margin-left:auto;}
+
+/* INSTALL */
+.install-wrap{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:6px;overflow:hidden;}
+.install-step{display:flex;border-bottom:1px solid var(--border);}
+.install-step:last-child{border-bottom:none;}
+.step-n{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--accent);min-width:56px;padding:24px 20px;background:var(--surface);border-right:1px solid var(--border);display:flex;align-items:flex-start;justify-content:center;}
+.step-b{padding:20px 28px;flex:1;}
+.step-t{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:600;margin-bottom:10px;}
+.step-d{font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.6;}
+.code{background:var(--bg);border:1px solid var(--border);border-radius:4px;padding:14px 18px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.9;color:#94a3b8;overflow-x:auto;margin-top:10px;}
+.code .c{color:var(--dim);}.code .k{color:var(--accent);}.code .v{color:var(--accent2);}.code .s{color:var(--accent3);}
+
+/* SECURITY */
+.sec-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.sec-card{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:24px;}
+.sec-card-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;margin-bottom:14px;}
+.sec-item{font-size:13px;color:var(--muted);padding:7px 0;border-bottom:1px solid rgba(26,38,64,.4);display:flex;align-items:center;gap:8px;}
+.sec-item:last-child{border-bottom:none;}
+.si-done{color:var(--accent);}.si-todo{color:var(--accent3);}
+
+/* FOOTER */
+footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:44px 48px;display:flex;align-items:center;justify-content:space-between;}
+.ft-name{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:var(--accent);margin-bottom:4px;}
+.ft-sub{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:1px;}
+.ft-links{display:flex;gap:20px;}
+.ft-link{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);text-decoration:none;transition:color .2s;}
+.ft-link:hover{color:var(--accent);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:translateY(0);}}
+.hero-eyebrow{animation:fadeUp .5s ease both;}
+.hero h1{animation:fadeUp .5s .1s ease both;}
+.hero-sub{animation:fadeUp .5s .2s ease both;}
+.hero-cta{animation:fadeUp .5s .3s ease both;}
+
+@media(max-width:900px){
+  nav{padding:14px 24px;}.nav-links{display:none;}.terminal{display:none;}
+  .hero{padding:100px 24px 60px;}section{padding:72px 24px;}
+  .stats{flex-direction:column;}.stat{border-right:none;border-bottom:1px solid var(--border);}
+  .arch-wrap,.schema-grid,.sec-grid,.feat-grid{grid-template-columns:1fr;}
+  footer{flex-direction:column;gap:20px;padding:32px 24px;}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">會員留言板系統</div>
+  <ul class="nav-links">
+    <li><a href="#features">功能</a></li>
+    <li><a href="#arch">架構</a></li>
+    <li><a href="#routes">路由</a></li>
+    <li><a href="#install">安裝</a></li>
+  </ul>
+  <div class="nav-stack">
+    <div class="stack-dot" style="background:#339933"></div>
+    <div class="stack-dot" style="background:#e2e8f0"></div>
+    <div class="stack-dot" style="background:#47A248"></div>
+  </div>
+</nav>
+
+<section class="hero">
+  <div class="hero-eyebrow">Tai-Ju Liu · Full-Stack Practice</div>
+  <h1>會員<br><em>留言板</em><br>系統</h1>
+  <p class="hero-sub">以 Node.js + Express + MongoDB 打造的全端會員管理與留言板系統，包含使用者註冊、登入驗證、Session 管理、即時留言功能。</p>
+  <div class="hero-cta">
+    <a href="https://github.com/Tai-Ju/member-message-system" class="btn-p" target="_blank">↗ GitHub Repo</a>
+    <a href="#install" class="btn-g">本地運行 →</a>
+  </div>
+  <div class="terminal">
+    <div class="t-bar">
+      <div class="t-dot r"></div><div class="t-dot y"></div><div class="t-dot g"></div>
+      <div class="t-title">node index.js</div>
+    </div>
+    <div class="t-body">
+      <div><span class="tp">$</span> <span class="tc">node index.js</span></div>
+      <div><span class="to">Connecting to MongoDB Atlas...</span></div>
+      <div><span class="ts">✓ Database Ready</span></div>
+      <div><span class="ts">✓ Server Started on</span> <span class="tu">http://127.0.0.1:3000</span></div>
+      <div>&nbsp;</div>
+      <div><span class="to">POST /signup  → 200 OK</span></div>
+      <div><span class="to">POST /signin  → 200 OK</span></div>
+      <div><span class="to">GET  /member  → 200 OK</span></div>
+      <div><span class="to">POST /message → 200 OK</span></div>
+      <div><span class="tp">$</span> <span class="t-cursor"></span></div>
+    </div>
+  </div>
+</section>
+
+<div class="stats">
+  <div class="stat"><div class="stat-num">Node.js</div><div class="stat-label">執行環境</div></div>
+  <div class="stat"><div class="stat-num">MongoDB</div><div class="stat-label">NoSQL 資料庫</div></div>
+  <div class="stat"><div class="stat-num">Session</div><div class="stat-label">認證機制</div></div>
+  <div class="stat"><div class="stat-num">7+</div><div class="stat-label">API 路由</div></div>
+</div>
+
+<section id="features" style="background:var(--surface)">
+  <div class="sec-label" data-n="01">Features</div>
+  <div class="sec-title">功能特色</div>
+  <div class="feat-grid">
+    <div class="feat-card"><div class="feat-icon">🔐</div><div class="feat-title">使用者註冊</div><div class="feat-desc">信箱重複驗證機制，確保每個信箱只能註冊一次帳號。</div></div>
+    <div class="feat-card"><div class="feat-icon">🔑</div><div class="feat-title">安全登入</div><div class="feat-desc">Session 狀態管理，使用 Secret Key 加密，登入後自動導向會員專區。</div></div>
+    <div class="feat-card"><div class="feat-icon">💬</div><div class="feat-title">即時留言</div><div class="feat-desc">登入會員可發表留言，按時間倒序排列，即時顯示最新訊息。</div></div>
+    <div class="feat-card"><div class="feat-icon">🛡️</div><div class="feat-title">路由保護</div><div class="feat-desc">未登入用戶自動重導向至登入頁，保護會員專屬功能。</div></div>
+    <div class="feat-card"><div class="feat-icon">🔒</div><div class="feat-title">環境變數管理</div><div class="feat-desc">敏感資訊透過 .env 與程式碼分離，.env 不上傳至 GitHub。</div></div>
+    <div class="feat-card"><div class="feat-icon">🚪</div><div class="feat-title">登出功能</div><div class="feat-desc">清除 Session 資料，安全登出並返回登入頁面。</div></div>
+  </div>
+</section>
+
+<section id="arch">
+  <div class="sec-label" data-n="02">Architecture</div>
+  <div class="sec-title">技術架構</div>
+  <div class="arch-wrap">
+    <div class="arch-diagram">
+      <div class="arch-layer"><div class="arch-icon">🌐</div><div><div class="arch-name">Browser / Client</div><div class="arch-desc">HTML + CSS + EJS 模板渲染</div></div></div>
+      <div class="arch-arrow">↕</div>
+      <div class="arch-layer"><div class="arch-icon">⚡</div><div><div class="arch-name">Express.js v5</div><div class="arch-desc">路由處理 / Session 管理 / 中間件</div></div></div>
+      <div class="arch-arrow">↕</div>
+      <div class="arch-layer"><div class="arch-icon">🟢</div><div><div class="arch-name">Node.js v18+</div><div class="arch-desc">JavaScript 執行環境</div></div></div>
+      <div class="arch-arrow">↕</div>
+      <div class="arch-layer"><div class="arch-icon">🍃</div><div><div class="arch-name">MongoDB Atlas</div><div class="arch-desc">NoSQL 雲端資料庫（member / message）</div></div></div>
+    </div>
+    <div class="arch-badges">
+      <div class="arch-badge"><div class="badge-dot" style="background:#339933"></div><div><div class="badge-name">Node.js</div><div class="badge-desc">v18+ 執行環境</div></div></div>
+      <div class="arch-badge"><div class="badge-dot" style="background:#e2e8f0"></div><div><div class="badge-name">Express.js</div><div class="badge-desc">v5.1.0 Web 框架</div></div></div>
+      <div class="arch-badge"><div class="badge-dot" style="background:#47A248"></div><div><div class="badge-name">MongoDB</div><div class="badge-desc">v6.16.0 NoSQL 資料庫</div></div></div>
+      <div class="arch-badge"><div class="badge-dot" style="background:#f59e0b"></div><div><div class="badge-name">EJS</div><div class="badge-desc">伺服器端模板引擎</div></div></div>
+      <div class="arch-badge"><div class="badge-dot" style="background:#60a5fa"></div><div><div class="badge-name">express-session</div><div class="badge-desc">v1.18.1 Session 管理</div></div></div>
+      <div class="arch-badge"><div class="badge-dot" style="background:#8b5cf6"></div><div><div class="badge-name">dotenv</div><div class="badge-desc">環境變數管理</div></div></div>
+    </div>
+  </div>
+</section>
+
+<section id="routes" style="background:var(--surface)">
+  <div class="sec-label" data-n="03">API Routes</div>
+  <div class="sec-title">路由對照表</div>
+  <table class="route-tbl">
+    <thead><tr><th>Method</th><th>路徑</th><th>說明</th><th>狀態</th></tr></thead>
+    <tbody>
+      <tr><td><span class="rbadge rb-get">GET</span></td><td class="rpath">/</td><td class="rdesc">顯示首頁（登入 / 註冊表單）</td><td><span class="rtag">公開</span></td></tr>
+      <tr><td><span class="rbadge rb-post">POST</span></td><td class="rpath">/signup</td><td class="rdesc">註冊新帳戶（name, email, password）</td><td><span class="rtag">公開</span></td></tr>
+      <tr><td><span class="rbadge rb-post">POST</span></td><td class="rpath">/signin</td><td class="rdesc">會員登入驗證，建立 Session</td><td><span class="rtag">公開</span></td></tr>
+      <tr><td><span class="rbadge rb-get">GET</span></td><td class="rpath">/error</td><td class="rdesc">顯示錯誤訊息頁面</td><td><span class="rtag">公開</span></td></tr>
+      <tr><td><span class="rbadge rb-get">GET</span></td><td class="rpath">/member</td><td class="rdesc">會員專區（含留言列表）</td><td><span class="rbadge rb-lock">需登入</span></td></tr>
+      <tr><td><span class="rbadge rb-post">POST</span></td><td class="rpath">/message</td><td class="rdesc">發表留言（content）</td><td><span class="rbadge rb-lock">需登入</span></td></tr>
+      <tr><td><span class="rbadge rb-get">GET</span></td><td class="rpath">/signout</td><td class="rdesc">登出，清除 Session</td><td><span class="rbadge rb-lock">需登入</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <div class="sec-label" data-n="04">Database</div>
+  <div class="sec-title">資料庫設計</div>
+  <div class="schema-grid">
+    <div class="schema-card">
+      <div class="schema-head"><span>👤</span><div class="schema-name">Member Collection</div><div class="schema-coll">member</div></div>
+      <div class="schema-body">
+        <div class="schema-field"><span class="sf-name">_id</span><span class="sf-type">ObjectId</span><span class="sf-note">自動產生</span></div>
+        <div class="schema-field"><span class="sf-name">email</span><span class="sf-type">String</span><span class="sf-note">唯一值</span></div>
+        <div class="schema-field"><span class="sf-name">password</span><span class="sf-type">String</span><span class="sf-note">明文儲存</span></div>
+        <div class="schema-field"><span class="sf-name">name</span><span class="sf-type">String</span><span class="sf-note">顯示名稱</span></div>
+        <div class="schema-field"><span class="sf-name">time</span><span class="sf-type">Number</span><span class="sf-note">時間戳記</span></div>
+      </div>
+    </div>
+    <div class="schema-card">
+      <div class="schema-head"><span>💬</span><div class="schema-name">Message Collection</div><div class="schema-coll">message</div></div>
+      <div class="schema-body">
+        <div class="schema-field"><span class="sf-name">_id</span><span class="sf-type">ObjectId</span><span class="sf-note">自動產生</span></div>
+        <div class="schema-field"><span class="sf-name">name</span><span class="sf-type">String</span><span class="sf-note">留言者名稱</span></div>
+        <div class="schema-field"><span class="sf-name">content</span><span class="sf-type">String</span><span class="sf-note">留言內容</span></div>
+        <div class="schema-field"><span class="sf-name">time</span><span class="sf-type">Number</span><span class="sf-note">時間戳記</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="install" style="background:var(--surface)">
+  <div class="sec-label" data-n="05">Install</div>
+  <div class="sec-title">本地運行</div>
+  <div class="install-wrap">
+    <div class="install-step">
+      <div class="step-n">01</div>
+      <div class="step-b">
+        <div class="step-t">Clone 專案</div>
+        <div class="code"><span class="k">git clone</span> https://github.com/Tai-Ju/member-message-system.git<br><span class="k">cd</span> member-message-system</div>
+      </div>
+    </div>
+    <div class="install-step">
+      <div class="step-n">02</div>
+      <div class="step-b">
+        <div class="step-t">安裝依賴套件</div>
+        <div class="code"><span class="k">npm install</span></div>
+      </div>
+    </div>
+    <div class="install-step">
+      <div class="step-n">03</div>
+      <div class="step-b">
+        <div class="step-t">設定環境變數</div>
+        <div class="step-d">複製 .env.example 為 .env，填入 MongoDB 連線字串與 Session Secret</div>
+        <div class="code"><span class="c"># Windows</span><br><span class="k">copy</span> .env.example .env<br><br><span class="v">MONGODB_URI</span>=mongodb+srv://username:password@cluster.mongodb.net/<br><span class="v">SESSION_SECRET</span>=your-random-secret-key<br><span class="v">PORT</span>=<span class="s">3000</span></div>
+      </div>
+    </div>
+    <div class="install-step">
+      <div class="step-n">04</div>
+      <div class="step-b">
+        <div class="step-t">啟動伺服器</div>
+        <div class="code"><span class="k">node</span> index.js<br><br><span class="c"># 看到以下訊息代表成功：</span><br><span class="k">✓ Database Ready</span><br><span class="k">✓ Server Started on</span> http://127.0.0.1:3000</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="sec-label" data-n="06">Security</div>
+  <div class="sec-title">安全性</div>
+  <div class="sec-grid">
+    <div class="sec-card">
+      <div class="sec-card-title">✅ 已實作</div>
+      <div class="sec-item"><span class="si-done">✓</span> 環境變數保護敏感資訊（.env 不上傳）</div>
+      <div class="sec-item"><span class="si-done">✓</span> Session Secret Key 加密</div>
+      <div class="sec-item"><span class="si-done">✓</span> 路由保護（未登入無法訪問會員功能）</div>
+      <div class="sec-item"><span class="si-done">✓</span> 信箱重複驗證</div>
+    </div>
+    <div class="sec-card">
+      <div class="sec-card-title">🔄 未來改進方向</div>
+      <div class="sec-item"><span class="si-todo">→</span> 密碼 bcrypt 加密</div>
+      <div class="sec-item"><span class="si-todo">→</span> CSRF 保護</div>
+      <div class="sec-item"><span class="si-todo">→</span> XSS 防護</div>
+      <div class="sec-item"><span class="si-todo">→</span> NoSQL Injection 防護</div>
+      <div class="sec-item"><span class="si-todo">→</span> 密碼強度 &amp; 信箱格式驗證</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div>
+    <div class="ft-name">Tai-Ju Liu</div>
+    <div class="ft-sub">member-message-system · Node.js + Express + MongoDB</div>
+  </div>
+  <div class="ft-links">
+    <a href="https://github.com/Tai-Ju" class="ft-link" target="_blank">GitHub</a>
+    <a href="https://github.com/Tai-Ju/member-message-system" class="ft-link" target="_blank">Repo</a>
+    <a href="https://lulu.lufolio.dev" class="ft-link" target="_blank">Portfolio</a>
+  </div>
+</footer>
+
+<script>
+const obs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.style.opacity='1'; e.target.style.transform='translateY(0)'; } });
+}, { threshold: 0.08 });
+document.querySelectorAll('.feat-card,.arch-badge,.arch-layer,.schema-card,.install-step,.sec-card,.stat').forEach(el => {
+  el.style.opacity='0'; el.style.transform='translateY(18px)';
+  el.style.transition='opacity .5s ease, transform .5s ease';
+  obs.observe(el);
+});
+</script>
+</body>
+</html>
