@@ -13,6 +13,8 @@
 
 </div>
 
+🌐 GitHub Pages：https://tai-ju.github.io/member-message-system/
+
 ---
 
 ## 📖 專案簡介
